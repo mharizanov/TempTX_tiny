@@ -2,6 +2,7 @@
 // TempTX-tiny ATtiny84 Based Wireless Temperature Sensor Node
 // By Nathan Chantrell http://nathan.chantrell.net
 // Updated by Martin Harizanov (harizanov.com) to work with DS18B20
+// To use with DS18B20 instead of TMP36, a 4K7 resistor is needed between the Digital 9 and Digital 10 of the ATTiny (Vdd and DQ)
 // To get this to compile follow carefully the discussion here: http://arduino.cc/forum/index.php?topic=91491.0
 // GNU GPL V3
 //--------------------------------------------------------------------------------------
