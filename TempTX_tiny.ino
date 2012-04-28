@@ -1,30 +1,58 @@
+
 //--------------------------------------------------------------------------------------
 // TempTX-tiny ATtiny84 Based Wireless Temperature Sensor Node
 // By Nathan Chantrell http://nathan.chantrell.net
-//
+// Updated by Martin Harizanov (harizanov.com) to work with DS18B20
 // GNU GPL V3
 //--------------------------------------------------------------------------------------
 
 #include <JeeLib.h> // https://github.com/jcw/jeelib
+#include "pins_arduino.h"
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+ 
+#define ONE_WIRE_BUS 10  //pin 13 of the attiny84
+
+/*
+                     +-\/-+
+               VCC  1|    |14  GND
+          (D0) PB0  2|    |13  AREF (D10)
+          (D1) PB1  3|    |12  PA1 (D9)
+             RESET  4|    |11  PA2 (D8)
+INT0  PWM (D2) PB2  5|    |10  PA3 (D7)
+      PWM (D3) PA7  6|    |9   PA4 (D6)
+      PWM (D4) PA6  7|    |8   PA5 (D5) PWM
+                     +----+
+*/
+
+
+// Setup a oneWire instance to communicate with any OneWire devices 
+// (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+ 
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
+
+
 
 ISR(WDT_vect) { Sleepy::watchdogEvent(); } // interrupt handler for JeeLabs Sleepy power saving
 
-#define myNodeID 1      // RF12 node ID in the range 1-30
+#define myNodeID 7      // RF12 node ID in the range 1-30
 #define network 210      // RF12 Network group
-#define freq RF12_433MHZ // Frequency of RFM12B module
+#define freq RF12_868MHZ // Frequency of RFM12B module
 
-#define tempPin A0       // TMP36 Vout connected to A0 (ATtiny pin 13)
 #define tempPower 9      // TMP36 Power pin is connected on pin D9 (ATtiny pin 12)
 
-int tempReading;         // Analogue reading from the sensor
 
 //########################################################################################################################
 //Data Structure to be sent
 //########################################################################################################################
 
  typedef struct {
-  	  int temp;	// Temperature reading
+     int temp;	// Temperature reading
   	  int supplyV;	// Supply voltage
+      	  int temp2;	// Temperature 2 reading
  } Payload;
 
  Payload temptx;
@@ -34,37 +62,28 @@ int tempReading;         // Analogue reading from the sensor
 void setup() {
 
   rf12_initialize(myNodeID,freq,network); // Initialize RFM12 with settings defined above 
+  // Adjust low battery voltage to 2.2V UNTESTED!!!!!!!!!!!!!!!!!!!!!
+  rf12_control(0xC040);
   rf12_sleep(0);                          // Put the RFM12 to sleep
-
-  analogReference(INTERNAL);  // Set the aref to the internal 1.1V reference
- 
   pinMode(tempPower, OUTPUT); // set power pin for TMP36 to output
- 
+
+  digitalWrite(tempPower, HIGH); // turn sensor power on
+  delay(100);
+  // Start up the library
+  sensors.begin(); 
 }
 
 void loop() {
   
   digitalWrite(tempPower, HIGH); // turn TMP36 sensor on
-
-  delay(10); // Allow 10ms for the sensor to be ready
- 
-  analogRead(tempPin); // throw away the first reading
+  delay(50); // Allow 50ms for the sensor to be ready
   
-  for(int i = 0; i < 10 ; i++) // take 10 more readings
-  {
-   tempReading += analogRead(tempPin); // accumulate readings
-  }
-  tempReading = tempReading / 10 ; // calculate the average
-
-  digitalWrite(tempPower, LOW); // turn TMP36 sensor off
-
-//  double voltage = tempReading * (1100/1024); // Convert to mV (assume internal reference is accurate)
+  sensors.requestTemperatures(); // Send the command to get temperatures  
   
-  double voltage = tempReading * 0.942382812; // Calibrated conversion to mV
-
-  double temperatureC = (voltage - 500) / 10; // Convert to temperature in degrees C. 
-
-  temptx.temp = temperatureC * 100; // Convert temperature to an integer, reversed at receiving end
+  sensors.getTempCByIndex(0);
+  
+  temptx.temp=(sensors.getTempCByIndex(0)*100);
+  temptx.temp2=(sensors.getTempCByIndex(1)*100);
   
   temptx.supplyV = readVcc(); // Get supply voltage
 
@@ -89,6 +108,7 @@ void loop() {
 //--------------------------------------------------------------------------------------------------
 // Read current supply voltage
 //--------------------------------------------------------------------------------------------------
+
  long readVcc() {
    long result;
    // Read 1.1V reference against Vcc
