@@ -43,7 +43,7 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); } // interrupt handler for JeeLabs Slee
 #define network 210      // RF12 Network group
 #define freq RF12_868MHZ // Frequency of RFM12B module
 
-#define tempPower 9      // TMP36 Power pin is connected on pin D9 (ATtiny pin 12)
+#define tempPower 9      // Power pin is connected on pin D9 (ATtiny pin 12)
 
 
 //########################################################################################################################
@@ -63,7 +63,7 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); } // interrupt handler for JeeLabs Slee
 void setup() {
 
   rf12_initialize(myNodeID,freq,network); // Initialize RFM12 with settings defined above 
-  // Adjust low battery voltage to 2.2V UNTESTED!!!!!!!!!!!!!!!!!!!!!
+  // Adjust low battery voltage to 2.2V
   rf12_control(0xC040);
   rf12_sleep(0);                          // Put the RFM12 to sleep
   pinMode(tempPower, OUTPUT); // set power pin for TMP36 to output
@@ -83,8 +83,8 @@ void loop() {
   
   sensors.getTempCByIndex(0);
   
-  temptx.temp=(sensors.getTempCByIndex(0)*100);
-  temptx.temp2=(sensors.getTempCByIndex(1)*100);
+  temptx.temp=(sensors.getTempCByIndex(0)*100); // read sensor 1
+  temptx.temp2=(sensors.getTempCByIndex(1)*100); // read second sensor.. you may have multiple and count them upon startup but I only need two
   
   temptx.supplyV = readVcc(); // Get supply voltage
 
