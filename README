@@ -2,6 +2,8 @@ TempTX-tiny ATtiny84 Bases Wireless Temperature Sensor Node
 By Nathan Chantrell http://nathan.chantrell.net
 GNU GPL V3
 
-Uses ATtiny84 microcontroller and Analog Devices TMP36 Temperature Sensor
+Uses ATtiny84 microcontroller and DS18B20 Temperature Sensors
 
 Hardware design is available at http://nathan.chantrell.net/20120225/an-attiny-based-wireless-temperature-sensor/
+
+To use with DS18B20 instead of TMP36, a 4K7 resistor is needed between the Digital 9 and Digital 10 of the ATTiny (Vdd and DQ)
