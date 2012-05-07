@@ -76,12 +76,12 @@ void setup() {
 
 void loop() {
   
-  digitalWrite(tempPower, HIGH); // turn TMP36 sensor on
-  delay(50); // Allow 50ms for the sensor to be ready
+  digitalWrite(tempPower, HIGH); // turn DS18B20 sensor on
+  delay(10); // Allow 10ms for the sensor to be ready
   
   sensors.requestTemperatures(); // Send the command to get temperatures  
   
-  sensors.getTempCByIndex(0);
+  //sensors.getTempCByIndex(0);
   
   temptx.temp=(sensors.getTempCByIndex(0)*100); // read sensor 1
   temptx.temp2=(sensors.getTempCByIndex(1)*100); // read second sensor.. you may have multiple and count them upon startup but I only need two
